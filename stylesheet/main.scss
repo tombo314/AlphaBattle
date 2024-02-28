@@ -1,0 +1,42 @@
+*{
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html{
+    background-color: #fb21;
+}
+
+$gridWidth: 6vw;
+$gridHeight: 52px;
+$colNum: 7;
+.grid{
+    width: $gridWidth*$colNum;
+    display: grid;
+    margin: 60px auto 30px auto;
+    grid-template-columns:
+        $gridWidth
+        $gridWidth
+        $gridWidth
+        $gridWidth
+        $gridWidth
+        $gridWidth
+        $gridWidth
+    ;
+    font-size: 36px;
+    color: #444;
+    border: 1px solid #333;
+
+    .rect{
+        width: $gridWidth;
+        height: $gridHeight;
+        text-align: center;
+        border: 1px solid #555;
+        background-color: #fca3;
+    }
+
+    .rotate180{
+        transform: rotate(180deg);
+    }
+}

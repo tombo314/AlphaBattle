@@ -1,0 +1,29 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  background-color: rgba(255, 187, 34, 0.0666666667);
+}
+
+.grid {
+  width: 42vw;
+  display: grid;
+  margin: 60px auto 30px auto;
+  grid-template-columns: 6vw 6vw 6vw 6vw 6vw 6vw 6vw;
+  font-size: 36px;
+  color: #444;
+  border: 1px solid #333;
+}
+.grid .rect {
+  width: 6vw;
+  height: 52px;
+  text-align: center;
+  border: 1px solid #555;
+  background-color: rgba(255, 204, 170, 0.2);
+}
+.grid .rotate180 {
+  transform: rotate(180deg);
+}/*# sourceMappingURL=main.css.map */
