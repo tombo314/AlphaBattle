@@ -11,6 +11,9 @@ http.createServer((req, res)=>{
     } else if (req.url==="/main.js"){
         res.writeHead(200, {"Content-Type": "text/js"});
         res.end(fs.readFileSync("main.js"));
+    } else if (req.url==="/data.json"){
+        res.writeHead(200, {"Content-Type": "application/json"});
+        res.end(fs.readFileSync("data.json"));
     } else if (req.url==="favicon.ico"){
         res.end();
     }
