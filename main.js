@@ -43,8 +43,8 @@ class Grid {
         this.colNum = colNum;
         this.colorInit = "#fca3";
         this.colorWall = "#555";
-        this.colorMoveCand = "#3af4";
-        this.colorSelected = "#fd7e";
+        this.colorMoveCand = "#3afb";
+        this.colorSelected = "#fd4";
         this.isWall = Array(rowNum);
         for (let i=0; i<rowNum; i++){
             this.isWall[i] = Array(colNum);
@@ -58,7 +58,7 @@ class Grid {
 
         fetch("data.json")
             .then(res => res.json())
-            .then(data => this.data = data);
+            .then(data => this.moveData = data["move"]);
     }
 
     // グリッドを生成する
@@ -92,6 +92,12 @@ class Grid {
             elemRect.textContent = charList[i];
             elemGrid.appendChild(elemRect);
         }
+    }
+
+    // 文字を取得する
+    getChar(i, j){
+        let elemGrid = document.getElementById(`js-grid-${i}${j}`);
+        return elemGrid.textContent;
     }
 
     // マスの色を変える
@@ -143,26 +149,53 @@ let pieceFriend = new Piece("friend");
 let pieceOpponent = new Piece("opponent");
 let selectedCoord = new Pair(-1, -1);
 
+// グリッドのonclick
 for (let i=0; i<rowNum*colNum; i++){
     let coord = dim1To2(i);
-    let p = coord.first;
-    let q = coord.second;
+    let nowI = coord.first;
+    let nowJ = coord.second;
     
-    // グリッドのonclick
     let elemRect = document.getElementsByClassName("rect");
     elemRect[i].onclick = ()=>{
-        if (elemRect[i].textContent!=="" && p>0 && !grid.isWall[p][q]){
+        let selectedChar = elemRect[i].textContent;
+
+        // マスにコマが置いてあるとき
+        if (selectedChar!=="" && nowI>0 && !grid.isWall[nowI][nowJ]){
             if (selectedCoord.first===-1){
-                selectedCoord = new Pair(p, q);
-                grid.changeColorSelected(p, q);
-            } else if (p===selectedCoord.first && q===selectedCoord.second){
-                selectedCoord = new Pair(-1, -1);
-                grid.changeColorInit(p, q);
+                selectedCoord = new Pair(nowI, nowJ);
+
+                // 選択中のマスの色を変える
+                grid.changeColorSelected(nowI, nowJ);
+
+                // 動かせるマスの色を変える
+                for (let coordDiff of grid.moveData[selectedChar]){
+                    let diffI = coordDiff[0];
+                    let diffJ = coordDiff[1];
+                    let nextI = nowI+diffI;
+                    let nextJ = nowJ+diffJ;
+                    if (nextI<0 || nextI>=rowNum || nextJ<0 || nextJ>=colNum){
+                        continue;
+                    }
+                    if (grid.isWall[nextI][nextJ]){
+                        continue;
+                    }
+                    if (grid.getChar(nextI, nextJ)!==""){
+                        continue;
+                    }
+                    grid.changeColorMoveCand(nextI, nextJ);
+                }
             }
-        }
+            // グリッドの色を元に戻す
+            else if (nowI===selectedCoord.first && nowJ===selectedCoord.second){
+                selectedCoord = new Pair(-1, -1);
+                for (let j=0; j<rowNum; j++){
+                    for (let k=0; k<colNum; k++){
+                        if (!grid.isWall[j][k]){
+                            grid.changeColorInit(j, k);
+                        }
+                    }
+                }
+            }
+        }        
     };
 }
-
-setTimeout(() => {
-    console.log(grid.data);
-}, 100);
