@@ -8,7 +8,7 @@ function dim1To2(n){
     return new Pair(parseInt(n/colNum), n%colNum);
 }
 
-// C++のpair
+// first, second
 class Pair {
     constructor(first, second){
         this.first = first;
@@ -55,6 +55,10 @@ class Grid {
             this.isSelected[i] = Array(colNum);
             this.isSelected[i].fill(false);
         }
+
+        fetch("data.json")
+            .then(res => res.json())
+            .then(data => this.data = data);
     }
 
     // グリッドを生成する
@@ -137,13 +141,15 @@ for (let i=0; i<wallNum; i++){
 
 let pieceFriend = new Piece("friend");
 let pieceOpponent = new Piece("opponent");
-
 let selectedCoord = new Pair(-1, -1);
-let elemRect = document.getElementsByClassName("rect");
+
 for (let i=0; i<rowNum*colNum; i++){
     let coord = dim1To2(i);
     let p = coord.first;
     let q = coord.second;
+    
+    // グリッドのonclick
+    let elemRect = document.getElementsByClassName("rect");
     elemRect[i].onclick = ()=>{
         if (elemRect[i].textContent!=="" && p>0 && !grid.isWall[p][q]){
             if (selectedCoord.first===-1){
@@ -156,3 +162,7 @@ for (let i=0; i<rowNum*colNum; i++){
         }
     };
 }
+
+setTimeout(() => {
+    console.log(grid.data);
+}, 100);
