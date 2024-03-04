@@ -1,6 +1,9 @@
 // sessionStorage.clear();
-let seed = Math.random();
-sessionStorage("seed", seed);
+let seed = sessionStorage.getItem("seed");
+if (seed===null){
+    seed = Math.random().toString();
+    sessionStorage.setItem("seed", seed);
+}
 Math.seedrandom(seed);
 
 // [a, b)の範囲で整数の乱数を取得する
@@ -42,16 +45,15 @@ class Piece {
         }
     }
 
-    isFriend(i, j){
+    has(i, j){
         for (let char of charList){
-            if (this.friendOrOpponent==="friend"){
-                let p = this.coord[char].first;
-                let q = this.coord[char].second;
-                if (i!==p || j!==q){
-                    // if ()
-                }
+            let p = this.coord[char].first;
+            let q = this.coord[char].second;
+            if (i===p && j===q){
+                return true;
             }
         }
+        return false;
     }
 }
 
@@ -69,10 +71,10 @@ class Grid {
             this.isWall[i] = Array(colNum);
             this.isWall[i].fill(false);
         }
-        this.isSelected = Array(rowNum);
+        this.isMoveCand = Array(rowNum);
         for (let i=0; i<rowNum; i++){
-            this.isSelected[i] = Array(colNum);
-            this.isSelected[i].fill(false);
+            this.isMoveCand[i] = Array(colNum);
+            this.isMoveCand[i].fill(false);
         }
 
         fetch("data.json")
@@ -144,6 +146,67 @@ class Grid {
     changeColorSelected(i, j){
         this.changeColor(i, j, this.colorSelected);
     }
+
+    // 動かせるマスの色を変える
+    onclickChangeColorMoveCand(selectedChar, nowI, nowJ){
+        for (let coordDiff of this.moveData[selectedChar]){
+            let diffI = coordDiff[0];
+            let diffJ = coordDiff[1];
+            let nextI = nowI+diffI;
+            let nextJ = nowJ+diffJ;
+            if (nextI<0 || nextI>=rowNum || nextJ<0 || nextJ>=colNum){
+                continue;
+            }
+            if (this.isWall[nextI][nextJ]){
+                continue;
+            }
+            if (this.getChar(nextI, nextJ)!==""){
+                continue;
+            }
+            this.changeColorMoveCand(nextI, nextJ);
+        }
+    }
+
+    // グリッドの色を元に戻す
+    resetGridColor(){
+        selectedCoord = new Pair(-1, -1);
+        for (let i=0; i<rowNum; i++){
+            for (let j=0; j<colNum; j++){
+                if (!this.isWall[i][j]){
+                    this.changeColorInit(i, j);
+                }
+            }
+        }
+    }
+
+    // isMoveCandをtrueにする
+    addIsMoveCand(nowI, nowJ, selectedChar){
+        for (let coordDiff of this.moveData[selectedChar]){
+            let diffI = coordDiff[0];
+            let diffJ = coordDiff[1];
+            let nextI = nowI+diffI;
+            let nextJ = nowJ+diffJ;
+            if (nextI<0 || nextI>=rowNum || nextJ<0 || nextJ>=colNum){
+                continue;
+            }
+            if (this.isWall[nextI][nextJ]){
+                continue;
+            }
+            if (this.getChar(nextI, nextJ)!==""){
+                continue;
+            }
+            this.isMoveCand[nextI][nextJ] = true;
+        }
+    }
+
+    // isMoveCandをfalseにする
+    resetIsMoveCand(){
+        for (let i=0; i<rowNum; i++){
+            for (let j=0; j<colNum; j++){
+                this.isMoveCand[i][j] = false;
+            }
+        }
+    }
 }
 
 let rowNum = 9;
@@ -167,38 +230,6 @@ let pieceFriend = new Piece("friend");
 let pieceOpponent = new Piece("opponent");
 let selectedCoord = new Pair(-1, -1);
 
-// 動かせるマスの色を変える
-function onclickChangeColorMoveCand(grid, selectedChar, nowI, nowJ){
-    for (let coordDiff of grid.moveData[selectedChar]){
-        let diffI = coordDiff[0];
-        let diffJ = coordDiff[1];
-        let nextI = nowI+diffI;
-        let nextJ = nowJ+diffJ;
-        if (nextI<0 || nextI>=rowNum || nextJ<0 || nextJ>=colNum){
-            continue;
-        }
-        if (grid.isWall[nextI][nextJ]){
-            continue;
-        }
-        if (grid.getChar(nextI, nextJ)!==""){
-            continue;
-        }
-        grid.changeColorMoveCand(nextI, nextJ);
-    }
-}
-
-// グリッドの色を元に戻す
-function resetGridColor(grid){
-    selectedCoord = new Pair(-1, -1);
-    for (let j=0; j<rowNum; j++){
-        for (let k=0; k<colNum; k++){
-            if (!grid.isWall[j][k]){
-                grid.changeColorInit(j, k);
-            }
-        }
-    }
-}
-
 // グリッドのonclick
 for (let i=0; i<rowNum*colNum; i++){
     let coord = dim1To2(i);
@@ -210,29 +241,34 @@ for (let i=0; i<rowNum*colNum; i++){
         let selectedChar = elemRect[i].textContent;
 
         // マスにコマが置いてあるとき
-        if (selectedChar!=="" && nowI>0 && !grid.isWall[nowI][nowJ]){
+        if (selectedChar!=="" && pieceFriend.has(nowI, nowJ) && !grid.isWall[nowI][nowJ]){
             // マスが選択されていないとき
             if (selectedCoord.first===-1){
                 selectedCoord = new Pair(nowI, nowJ);
                 // 選択中のマスの色を変える
                 grid.changeColorSelected(nowI, nowJ);
                 // 動かせるマスの色を変える
-                onclickChangeColorMoveCand(grid, selectedChar, nowI, nowJ);
+                grid.onclickChangeColorMoveCand(selectedChar, nowI, nowJ);
+                // isMoveCandをtrueにする
+                grid.addIsMoveCand(nowI, nowJ, selectedChar);
             }
             // マスを選択中のとき
             else if (nowI===selectedCoord.first && nowJ===selectedCoord.second){
                 // グリッドの色を元に戻す
-                resetGridColor(grid);
+                grid.resetGridColor();
+                // isMoveCandをfalseにする
+                grid.resetIsMoveCand();
             }
         }
         // マスにコマが置いてないとき
-        // else if (selectedChar==="" && )
+        else if (selectedChar==="" && grid.isMoveCand[nowI][nowJ] && !grid.isWall[nowI][nowJ]){
+
+        }
     };
 }
 
 /*
 to do
 
-・sessionStorageで壁生成の乱数シードを保持しておく
-　リセットを押すと別の乱数を得る
+・リセットを押すと別の乱数シードから盤面を再生成する
 */
