@@ -1,4 +1,4 @@
-// sessionStorage.clear();
+sessionStorage.clear();
 let seed = sessionStorage.getItem("seed");
 if (seed===null){
     seed = Math.random().toString();
@@ -40,8 +40,8 @@ class Piece {
     }
 
     move(i, j, char){
-        this.coord[char] = new Pair(i, j);
         grid.move(i, j, char, this.friendOrOpponent);
+        this.coord[char] = new Pair(i, j);
     }
 
     hasCoord(i, j){
@@ -115,9 +115,28 @@ class Grid {
     }
 
     move(i, j, char, friendOrOpponent){
+        let coord;
         if (friendOrOpponent==="friend"){
+            coord = pieceFriend.coord[char];
         } else if (friendOrOpponent==="opponent"){
+            coord = pieceOpponent.coord[char];
         }
+        let preI = coord.first;
+        let preJ = coord.second;
+        this.getGridElem(preI, preJ).textContent = "";
+        this.getGridElem(i, j).textContent = char;
+        if (friendOrOpponent==="opponent"){
+            this.removeRotate180(preI, preJ);
+            this.addRotate180(i, j);
+        }
+    }
+
+    addRotate180(i, j){
+        this.getGridElem(i, j).setAttribute("class", "rect rotate180");
+    }
+
+    removeRotate180(i, j){
+        this.getGridElem(i, j).setAttribute("class", "rect");
     }
 
     // マスのエレメントを取得する
@@ -189,6 +208,7 @@ class Grid {
 
     // isMoveCandをtrueにする
     addIsMoveCand(nowI, nowJ, selectedChar){
+        let cancel = false;
         for (let coordDiff of this.moveData[selectedChar]){
             let diffI = coordDiff[0];
             let diffJ = coordDiff[1];
@@ -197,10 +217,18 @@ class Grid {
             if (nextI<0 || nextI>=rowNum || nextJ<0 || nextJ>=colNum){
                 continue;
             }
-            if (this.isWall[nextI][nextJ]){
+            if (this.getChar(nextI, nextJ)!==""){
                 continue;
             }
-            if (this.getChar(nextI, nextJ)!==""){
+            if (this.isWall[nextI][nextJ]){
+                if (['F', 'G'].includes(selectedChar) &&
+                (Math.abs(diffI)===1 || Math.abs(diffJ)===1)){
+                    cancel = true;
+                    continue;
+                }
+            }
+            if (cancel){
+                cancel = false;
                 continue;
             }
             this.isMoveCand[nextI][nextJ] = true;
@@ -249,8 +277,9 @@ for (let i=0; i<rowNum*colNum; i++){
     elemRect[i].onclick = ()=>{
         let selectedChar = elemRect[i].textContent;
 
-        // マスにコマが置かれているとき
+        // 選択したマスにコマが置かれているとき
         if (selectedChar!=="" && pieceFriend.hasCoord(nowI, nowJ) && !grid.isWall[nowI][nowJ]){
+
             // マスが選択されていないとき
             if (selectedCoord.first===-1){
                 selectedCoord = new Pair(nowI, nowJ);
@@ -271,10 +300,15 @@ for (let i=0; i<rowNum*colNum; i++){
                 movingChar = "";
             }
         }
-        // マスにコマが置かれていないとき
+        // 選択したマスにコマが置かれていないとき
         // 移動候補マスに選ばれているとき
         else if (selectedChar==="" && grid.isMoveCand[nowI][nowJ] && !grid.isWall[nowI][nowJ]){
             pieceFriend.move(nowI, nowJ, movingChar);
+            // グリッドの色を元に戻す
+            grid.resetGridColor();
+            // isMoveCandをfalseにする
+            grid.resetIsMoveCand();
+            movingChar = "";
         }
     };
 }
