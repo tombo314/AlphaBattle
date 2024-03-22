@@ -65,13 +65,6 @@ class Piece {
         }
     }
 
-    change2Pieces(char1, char2){
-        grid.change2Pieces(char1, char2, this.friendOrOpponent);
-        let tmp = this.coord[char1];
-        this.coord[char1] = this.coord[char2];
-        this.coord[char2] = tmp;
-    }
-
     hasCoord(i, j){
         for (let char of charList){
             let p = this.coord[char].first;
@@ -92,8 +85,7 @@ class Grid {
         this.colorInit = "#fca3";
         this.colorWall = "#555";
         this.colorMoveCand = "#3afb";
-        this.colorSelected = "#fa4";
-        this.colorPieceFriend = "#ff6a";
+        this.colorSelected = "#fc4e";
         this.colorGoal = "#afa";
         this.isWall = Array(rowNum);
         for (let i=0; i<rowNum; i++){
@@ -166,19 +158,6 @@ class Grid {
         }
     }
 
-    change2Pieces(char1, char2, friendOrOpponent){
-        if (friendOrOpponent==="friend"){
-            let coord1 = pieceFriend.coord[char1];
-            let i1 = coord1.first;
-            let j1 = coord1.second;
-            let coord2 = pieceFriend.coord[char2];
-            let i2 = coord2.first;
-            let j2 = coord2.second;
-            this.getGridElem(i1, j1).textContent = char2;
-            this.getGridElem(i2, j2).textContent = char1;
-        }
-    }
-
     deleteChar(i, j){
         this.getGridElem(i, j).textContent = "";
     }
@@ -229,20 +208,6 @@ class Grid {
     /** マスの色を変える（ゴール） */
     changeColorGoal(i, j){
         this.changeColor(i, j, this.colorGoal);
-    }
-
-    /** マスの色を変える（味方のコマ） */
-    changeColorPieceFriend(selectedChar){
-        for (let char of charList){
-            // 自分自身またはゴールしたコマのときcontinue
-            if (char===selectedChar || pieceFriend.coord[char].first===-1){
-                continue;
-            }
-            let coord = pieceFriend.coord[char];
-            let i = coord.first;
-            let j = coord.second;
-            this.changeColor(i, j, this.colorPieceFriend);
-        }
     }
 
     /** 文字ごとにゴールのマスかどうか判定する */
@@ -351,6 +316,7 @@ class System {
         } else if (rand===1){
             this.turn = "opponent";
         }
+        return this.turn;
     }
 
     startCountDownTurn(){
@@ -427,8 +393,6 @@ for (let i=0; i<rowNum*colNum; i++){
                 grid.addIsMoveCand(nowI, nowJ, selectedChar);
                 // 動かしている文字を持つ
                 movingChar = selectedChar;
-                // 味方のコマの色を変える
-                grid.changeColorPieceFriend(selectedChar);
             }
             // マスが選択されていて、選択中のコマをクリックしたとき
             else if (nowI===selectedCoord.first && nowJ===selectedCoord.second){
@@ -437,15 +401,6 @@ for (let i=0; i<rowNum*colNum; i++){
                 // isMoveCandをfalseにする
                 grid.resetIsMoveCand();
                 // 動かしている文字をクリアする
-                movingChar = "";
-            }
-            // マスが選択されていて、味方のコマをクリックしたとき
-            else if (pieceFriend.hasCoord(nowI, nowJ)){
-                pieceFriend.change2Pieces(movingChar, selectedChar);
-                // グリッドの色を元に戻す
-                grid.resetGridColor();
-                // isMoveCandをfalseにする
-                grid.resetIsMoveCand();
                 movingChar = "";
             }
         }
@@ -464,3 +419,4 @@ for (let i=0; i<rowNum*colNum; i++){
 }
 
 let system = new System();
+let turn = system.decideFirstSecond();
