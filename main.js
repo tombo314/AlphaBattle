@@ -420,3 +420,5 @@ for (let i=0; i<rowNum*colNum; i++){
 
 let system = new System();
 let turn = system.decideFirstSecond();
+
+/* 味方のコマ同士の入れ替えをなくす */
