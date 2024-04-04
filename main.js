@@ -141,6 +141,41 @@ class Grid {
         }
     }
 
+    /** 壁を生成する */
+    makeWall(){
+
+        let used = Array(rowNum);
+        for (let i=0; i<rowNum; i++){
+            used[i] = Array(colNum);
+            used[i].fill(false);
+        }
+
+        // A
+        for (let i=0; i<rowNum; i++){
+            used[i][0] = true;
+            used[i][colNum-1] = true;
+        }
+
+        // B
+        let nowI = rowNum-1;
+        let nowJ = 1;
+        for (let i=rowNum-1; i>=0; i--){
+            if (nowI==0){
+
+            }
+            let rand = getRand(0, 2);
+        }
+
+        for (let i=2; i<rowNum-2; i++){
+            for (let j=0; j<colNum; j++){
+                if (!used[i][j]){
+                    this.isWall[i][j] = true;
+                    this.changeColorWall(i, j);
+                }
+            }
+        }
+    }
+
     move(i, j, char, friendOrOpponent){
         let coord;
         if (friendOrOpponent==="friend"){
@@ -344,13 +379,7 @@ let grid = new Grid(rowNum, colNum);
 grid.makeGrid();
 
 // ランダムに壁を生成
-let wallNum = 7;
-for (let i=0; i<wallNum; i++){
-    let randRow = getRand(2, rowNum-2);
-    let randCol = getRand(0, colNum);
-    grid.isWall[randRow][randCol] = true;
-    grid.changeColorWall(randRow, randCol);
-}
+grid.makeWall();
 
 let pieceFriend = new Piece("friend");
 let pieceOpponent = new Piece("opponent");
@@ -421,4 +450,9 @@ for (let i=0; i<rowNum*colNum; i++){
 let system = new System();
 let turn = system.decideFirstSecond();
 
-/* 味方のコマ同士の入れ替えをなくす */
+/*
+
+・味方のコマ同士の入れ替えをなくす
+・それぞれのコマがゴールできるように壁を置く
+
+*/
